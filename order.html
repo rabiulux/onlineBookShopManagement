@@ -793,11 +793,12 @@
 
         //fetch books
         async function fetchBooks() {
-            try{
-                const bookURL = "https://bs-api.sobuj.net/view/books/readBook.php";
+          const bookURL = "https://bs-api.sobuj.net/view/books/readBook.php";
+            
+          try{
                 let response = await axios.get(bookURL);
                 booksData = response.data;
-               // console.log(booksData);
+              
             }catch(error){
                 console.log("Error in fetching books." , error);
                 
@@ -806,10 +807,35 @@
             }
         }
 
+
         //Add book's row
-        function addBookRow() {
+        async function addBookRow() {
             let container = document.getElementById("booksContainer");
             let rowIndex = container.children.length;
+
+
+            //-----------------------------
+            const authorsURL = "https://bs-api.sobuj.net/view/authors/readAuthors.php";
+
+          try{
+
+            // Fetch authors and create a mapping (author_id -> author_name)
+            let authorResponse = await axios.get(authorsURL);
+            let authors = authorResponse.data;
+            let authorMap = {};
+            authors.forEach(author => {
+                authorMap[author.author_id] = author.name;
+            });
+
+            // Ensure booksData is available
+          if (!Array.isArray(booksData) || booksData.length === 0) {
+              console.error("No books data available.");
+              alert("No books available. Please try again later.");
+              return;
+          }
+
+          
+            //-----------------------------
 
             // Creating row
             let row = document.createElement("div");
@@ -820,8 +846,8 @@
                         <option value="">Select a book</option>
                         ${
                             booksData.map(book => `
-                                <option value="${book.book_id}" data-price="${book.price}" data-author="${book.author}" >
-                                    ${book.title} - $${book.price} by ${book.author}
+                                <option value="${book.book_id}" data-price="${book.price}" data-author="${book.author_id}" >
+                                    ${book.title} - $${book.price} by ${authorMap[book.author_id] || "Unknown Author"}
                                 </option>
                             `).join("") // Properly joining the mapped values
                         }
@@ -842,6 +868,11 @@
             `;
 
             container.appendChild(row);
+            
+          }catch(error){
+            console.log("Error in fetching authors.", error);
+          }
+
         }
 
         //update price based on the selected books
